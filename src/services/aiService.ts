@@ -8,31 +8,37 @@ interface GeminiResponse {
 
 export async function enhanceTextWithAI(text: string, context: AIContext) {
   try {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+    // Ajuste do prompt para garantir uma resposta única
     const prompt =
       context === "summary"
-        ? "Você é um especialista em RH. Melhore o resumo profissional de forma clara, objetiva e impactante."
-        : "Você é um especialista em RH. Melhore a descrição da experiência profissional usando verbos de ação e quantificação.";
+        ? `Melhore este resumo profissional de forma clara, objetiva e impactante. Retorne apenas uma versão final:\n\n${text}`
+        : `Melhore esta descrição de experiência profissional, usando verbos de ação e quantificação quando possível. Retorne apenas uma versão final:\n\n${text}`;
 
     const response = await axios.post<GeminiResponse>(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${
-        import.meta.env.VITE_GEMINI_API_KEY
-      }`,
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
       {
         contents: [
           {
             role: "user",
-            parts: [
-              { text: `${prompt}\n\nTexto original:\n${text}` }
-            ]
-          }
-        ]
+            parts: [{ text: prompt }],
+          },
+        ],
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
       }
     );
 
-    const generatedText =
-      response.data.candidates[0].content.parts[0].text.trim();
+    // Pega apenas o primeiro candidato e o primeiro trecho de texto
+    const bestCandidate = response.data.candidates[0];
+    const improvedText = bestCandidate.content.parts[0].text.trim();
 
-    return generatedText;
+    return improvedText;
   } catch (error) {
     if (error instanceof Error) {
       console.error("Erro ao chamar Gemini:", error.message);

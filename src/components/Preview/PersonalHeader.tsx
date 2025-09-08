@@ -24,7 +24,7 @@ export default function PersonalHeader({ info }: { info: PersonalInfo }) {
           <Linkedin size={14} className="mr-1.5" />
           {info.linkedin}
         </a>
-        <span className="flex items-center">
+        <span className="flex items-left">
           <MapPin size={14} className="mr-1.5" />
           {info.location}
         </span>
